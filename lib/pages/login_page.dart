@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, use_build_context_synchronously, unused_element
 
 import 'package:demo_app/services/authentication/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../components/my_button.dart';
 import '../components/my_text_field.dart';
+import '../services/authentication/auth_gate.dart';
 import 'registration_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -27,11 +28,35 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   //SignIn Method
-  void signIn() {
+  void signIn() async {
     // ignore: unused_local_variable
     final authService = Provider.of<AuthService>(context, listen: false);
-    
+    try {
+      await authService.signInWithEmailAndPassword(
+          emailController.text, passwordController.text);
+
+      // Navigate to AuthGate on successful login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AuthGate()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
+    }
   }
+
+  // void signIn() async {
+  //   // ignore: unused_local_variable
+  //   final authService = Provider.of<AuthService>(context, listen: false);
+  //   try {
+  //     await authService.signInWithEmailAndPassword(
+  //         emailController.text, passwordController.text);
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context)
+  //         .showSnackBar(SnackBar(content: Text(e.toString())));
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -77,10 +102,23 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(
                   height: 30,
                 ),
-                MyTextField(
-                    controller: emailController,
-                    hintText: 'Password',
-                    obscureText: true),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: isHidden,
+                  decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey.shade200)),
+                      focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white)),
+                      fillColor: Colors.grey[250],
+                      filled: true,
+                      hintText: "Password",
+                      suffix: InkWell(
+                        onTap: _togglePasswordView,
+                        child: Icon(
+                            isHidden ? Icons.visibility : Icons.visibility_off),
+                      )),
+                ),
 
                 //signin button
                 const SizedBox(
@@ -120,5 +158,12 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     ));
+  }
+
+  bool isHidden = true;
+  void _togglePasswordView() {
+    setState(() {
+      isHidden = !isHidden;
+    });
   }
 }

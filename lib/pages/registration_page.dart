@@ -1,4 +1,9 @@
+// ignore_for_file: use_build_context_synchronously, unused_element
+
+import 'package:demo_app/pages/home_page.dart';
+import 'package:demo_app/services/authentication/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../components/my_button.dart';
 import '../components/my_text_field.dart';
@@ -25,7 +30,26 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   //SignIn Method
-  void signUp() {}
+  void signUp() async {
+    if (passwordController.text != confirmPasswordController.text) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Password do not Match')));
+      return;
+    }
+    final authService = Provider.of<AuthService>(context, listen: false);
+    try {
+      await authService.signUpWithEmailAndPassword(
+          emailController.text, passwordController.text);
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => const HomePage()));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,19 +94,45 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 const SizedBox(
                   height: 30,
                 ),
-                MyTextField(
-                    controller: passwordController,
-                    hintText: 'Password',
-                    obscureText: true),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: isHidden,
+                  decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey.shade200)),
+                      focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white)),
+                      fillColor: Colors.grey[250],
+                      filled: true,
+                      hintText: "Password",
+                      suffix: InkWell(
+                        onTap: _istoggleView,
+                        child: Icon(
+                            isHidden ? Icons.visibility : Icons.visibility_off),
+                      )),
+                ),
 
                 //confirm Password Textfield
                 const SizedBox(
                   height: 30,
                 ),
-                MyTextField(
-                    controller: confirmPasswordController,
-                    hintText: 'Confirm Password',
-                    obscureText: true),
+                TextFormField(
+                  controller: confirmPasswordController,
+                  obscureText: isHidden,
+                  decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey.shade200)),
+                      focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white)),
+                      fillColor: Colors.grey[250],
+                      filled: true,
+                      hintText: 'Confirm Password',
+                      suffix: InkWell(
+                        onTap: _istoggleView,
+                        child: Icon(
+                            isHidden ? Icons.visibility : Icons.visibility_off),
+                      )),
+                ),
 
                 //signin button
                 const SizedBox(
@@ -121,5 +171,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
         ),
       ),
     ));
+  }
+
+  bool isHidden = true;
+  void _istoggleView() {
+    setState(() {
+      isHidden =! isHidden;
+    });
   }
 }
